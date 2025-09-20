@@ -1,0 +1,6 @@
+flask>=3.0
+flask-cors>=4.0.0
+ultralytics>=8.0.196
+Pillow>=10.0.0
+torch; platform_system != 'Windows' or platform_machine != 'ARM64'
+opencv-python-headless>=4.8.0.74
