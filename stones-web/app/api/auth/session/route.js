@@ -12,6 +12,36 @@ export async function POST(request) {
     }
 
     console.log("Attempting to verify idToken...");
+    
+    // Enhanced debugging for environment variables
+    const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+    
+    console.log("Environment variables status:");
+    console.log("- FIREBASE_ADMIN_PROJECT_ID:", projectId ? "✓ Present" : "✗ Missing");
+    console.log("- FIREBASE_ADMIN_CLIENT_EMAIL:", clientEmail ? "✓ Present" : "✗ Missing");
+    console.log("- FIREBASE_ADMIN_PRIVATE_KEY:", privateKey ? `✓ Present (${privateKey.length} chars)` : "✗ Missing");
+    
+    // Check if Firebase Admin is properly configured
+    try {
+      const auth = getFirebaseAdminAuth();
+      console.log("Firebase Admin Auth initialized successfully");
+    } catch (adminError) {
+      console.error("Firebase Admin initialization failed:", adminError.message);
+      console.error("Full error:", adminError);
+      return NextResponse.json({ 
+        error: "Server configuration error - Firebase Admin not properly configured",
+        details: process.env.NODE_ENV === 'development' ? {
+          message: adminError.message,
+          hasProjectId: !!projectId,
+          hasClientEmail: !!clientEmail,
+          hasPrivateKey: !!privateKey,
+          privateKeyLength: privateKey ? privateKey.length : 0
+        } : undefined
+      }, { status: 500 });
+    }
+    
     const auth = getFirebaseAdminAuth();
     const decoded = await auth.verifyIdToken(idToken);
     console.log("Token verified successfully for uid:", decoded.uid);

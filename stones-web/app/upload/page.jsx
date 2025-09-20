@@ -1,12 +1,18 @@
 "use client"
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { getFirebaseAuth } from "@/lib/firebase-client";
+import { useAuth } from "@/lib/auth-context";
 import Button from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { Upload, FileText, Zap, Calendar, Star, Eye, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Upload, FileText, Zap, Calendar, Star, Eye, AlertCircle, CheckCircle2, LogOut, User } from 'lucide-react';
 
 const UploadPage = () => {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -14,7 +20,27 @@ const UploadPage = () => {
   const [detectionResult, setDetectionResult] = useState(null);
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
-  const router = useRouter();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -132,11 +158,47 @@ const UploadPage = () => {
     alert(`${feature} feature clicked! This would show more details about this feature.`);
   };
 
+  const handleLogout = async () => {
+    try {
+      const auth = getFirebaseAuth();
+      
+      // Clear session cookie
+      await fetch('/api/auth/session', {
+        method: 'DELETE',
+      });
+      
+      // Sign out from Firebase
+      await signOut(auth);
+      
+      // Redirect to login
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
       <div className="max-w-md mx-auto">
+        {/* User Header with Logout */}
+        <div className="flex justify-between items-center mb-6 pt-4">
+          <div className="flex items-center space-x-2">
+            <User className="w-5 h-5 text-gray-600" />
+            <span className="text-sm text-gray-600">
+              {user.displayName || user.email}
+            </span>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Logout</span>
+          </button>
+        </div>
+
         {/* Header */}
-        <div className="text-center mb-8 pt-8">
+        <div className="text-center mb-8">
           <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4">
             <Upload className="w-6 h-6 text-white" />
           </div>

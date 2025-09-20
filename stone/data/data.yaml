@@ -1,6 +1,6 @@
-train: /content/data/train/images
-val: /content/data/valid/images
-test: /content/data/test/images
+train: C:\Users\dell\Desktop\stones\stone\data\train
+val: C:\Users\dell\Desktop\stones\stone\data\valid
+test: C:\Users\dell\Desktop\stones\stone\data\test
 
 nc: 1
 names: ['stone']

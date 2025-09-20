@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kidney Stone Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-form {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-form input[type="file"] {
+            margin: 10px;
+            padding: 10px;
+        }
+        .upload-form input[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .upload-form input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .result-section {
+            margin-top: 30px;
+        }
+        .severity-box {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .severity-normal { background-color: #d4edda; color: #155724; }
+        .severity-moderate { background-color: #fff3cd; color: #856404; }
+        .severity-severe { background-color: #f8d7da; color: #721c24; }
+        .stones-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .stones-table th, .stones-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .stones-table th {
+            background-color: #f2f2f2;
+        }
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .download-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px;
+        }
+        .download-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kidney Stone Detection System</h1>
+        
+        <div class="upload-form">
+            <form method="POST" enctype="multipart/form-data">
+                <input type="file" name="image" accept="image/*" required>
+                <br>
+                <input type="submit" value="Upload and Analyze">
+            </form>
+        </div>
+
+        {% if no_stones_message %}
+            <div class="result-section">
+                <div class="severity-box severity-normal">
+                    {{ no_stones_message }}
+                </div>
+            </div>
+        {% endif %}
+
+        {% if severity %}
+            <div class="result-section">
+                <div class="severity-box severity-{{ severity.color }}">
+                    Severity Level: {{ severity.level }}<br>
+                    {{ severity.description }}
+                </div>
+            </div>
+        {% endif %}
+
+        {% if annotated_image %}
+            <div class="image-container">
+                <h3>Analyzed Image</h3>
+                <img src="{{ url_for('uploaded_file', filename=annotated_image.split('/')[-1]) }}" alt="Annotated kidney scan">
+            </div>
+        {% endif %}
+
+        {% if stones_data %}
+            <div class="result-section">
+                <h3>Stone Detection Results ({{ stone_count }} stones found)</h3>
+                <table class="stones-table">
+                    <thead>
+                        <tr>
+                            <th>Stone #</th>
+                            <th>Position</th>
+                            <th>Size (mm)</th>
+                            <th>Confidence</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stone in stones_data %}
+                        <tr>
+                            <td>{{ stone.id }}</td>
+                            <td>{{ stone.position }}</td>
+                            <td>{{ stone.diameter_mm }}</td>
+                            <td>{{ stone.confidence }}</td>
+                            <td>{{ stone.type }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if report_filename %}
+            <div class="result-section">
+                <h3>Download Report</h3>
+                <a href="{{ url_for('download_report', filename=report_filename) }}" class="download-btn">
+                    Download PDF Report
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
