@@ -81,9 +81,8 @@ def draw_annotations_on_image(image_path, detections, output_path):
     # Draw each detection
     for i, detection in enumerate(detections):
         bbox = detection["bbox"]
-        confidence = detection["confidence"]
-        diameter_mm = detection["diameter_mm"]
         stone_id = detection["id"]
+        diameter_mm = detection["diameter_mm"]
         
         # Extract coordinates
         x1, y1, x2, y2 = bbox
@@ -91,8 +90,8 @@ def draw_annotations_on_image(image_path, detections, output_path):
         # Draw bounding box
         draw.rectangle([x1, y1, x2, y2], outline=box_color, width=3)
         
-        # Prepare label text
-        label = f"#{stone_id}: {diameter_mm:.1f}mm ({confidence*100:.1f}%)"
+        # Prepare label text - only show diameter
+        label = f"{diameter_mm:.1f}mm"
         
         # Get text size for background rectangle
         try:
@@ -303,11 +302,6 @@ def generate_pdf_report(stones_data, annotated_image_path):
     elements.append(stones_table)
     elements.append(Spacer(1, 20))
     
-    # AI Observations
-    elements.append(Paragraph("<strong>AI Observations</strong>", styles['Normal']))
-    elements.append(Paragraph("Mild Pelvicalyceal Dilatation: ✕ Not Detected", styles['Normal']))
-    elements.append(Paragraph("Stone Growth (vs previous scan): ↑ 1 new stone", styles['Normal']))
-    
     # Build the PDF
     doc.build(elements)
     return report_filename
@@ -423,16 +417,17 @@ def index():
                 }
                 stones_data.append(stone_info)
 
-                # Draw bounding box and position with yellow color
+                # Draw bounding box and diameter with yellow color
                 draw.rectangle([x1, y1, x2, y2], outline="yellow", width=2)
                 # Draw text with yellow color and black outline for better visibility
                 text_position = (x1, y1 - 15)
+                diameter_text = f"{diameter_mm:.1f}mm"
                 # Draw text outline (black)
                 for offset in [(1,1), (-1,-1), (1,-1), (-1,1)]:
                     draw.text((text_position[0]+offset[0], text_position[1]+offset[1]), 
-                            position, fill="black", font=font)
+                            diameter_text, fill="black", font=font)
                 # Draw main text (yellow)
-                draw.text(text_position, position, fill="yellow", font=font)
+                draw.text(text_position, diameter_text, fill="yellow", font=font)
 
         # Save annotated image
         annotated_path = os.path.join(app.config['UPLOAD_FOLDER'], f"annotated_{file.filename}")
@@ -440,12 +435,10 @@ def index():
 
         # Calculate severity if stones are detected
         severity = None
-        report_filename = None
         
         if not no_stones_message and stones_data:
             total_burden = sum(float(stone['diameter_mm'].split()[0]) for stone in stones_data)
             severity = calculate_severity(len(stones_data), total_burden)
-            report_filename = generate_pdf_report(stones_data, annotated_path)
         elif not stones_data:
             severity = {
                 'level': 'Normal',
@@ -458,7 +451,7 @@ def index():
                             stones_data=stones_data, 
                             stone_count=len(stones_data),
                             no_stones_message=no_stones_message,
-                            report_filename=report_filename,
+                            report_filename=None,  # No automatic report generation
                             severity=severity)
 
     return render_template('index.html', 
@@ -634,6 +627,74 @@ def predict():
             
     except Exception as e:
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+
+@app.route('/generate-report', methods=['POST'])
+def generate_report():
+    """Generate PDF report on-demand from detection results"""
+    try:
+        # Get detection results from request
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        detections = data.get('detections', [])
+        summary = data.get('summary', {})
+        metadata = data.get('metadata', {})
+        annotated_image_base64 = data.get('annotated_image', '')
+        
+        if not detections and summary.get('total_stones', 0) == 0:
+            return jsonify({"error": "No detection data provided"}), 400
+        
+        # Create a temporary annotated image file if base64 is provided
+        annotated_image_path = None
+        if annotated_image_base64 and annotated_image_base64.startswith('data:image'):
+            # Extract base64 data
+            base64_data = annotated_image_base64.split(',')[1]
+            image_data = base64.b64decode(base64_data)
+            
+            # Save temporary image
+            temp_filename = f"temp_annotated_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+            annotated_image_path = os.path.join(app.config['UPLOAD_FOLDER'], temp_filename)
+            
+            with open(annotated_image_path, 'wb') as f:
+                f.write(image_data)
+        
+        # Transform detections data to match the existing format
+        stones_data = []
+        for detection in detections:
+            stone_info = {
+                "id": detection.get('id', len(stones_data) + 1),
+                "bounding_box": f"[{', '.join(map(str, detection.get('bbox', [0, 0, 0, 0])))}]",
+                "width_px": f"{detection.get('diameter_px', 0):.2f}px",
+                "height_px": f"{detection.get('diameter_px', 0):.2f}px",
+                "diameter_mm": f"{detection.get('diameter_mm', 0):.2f} mm",
+                "position": detection.get('position', 'unknown'),
+                "confidence": f"{detection.get('confidence', 0):.1%}",
+                "type": detection.get('type', 'kidney_stone')
+            }
+            stones_data.append(stone_info)
+        
+        # Generate PDF report
+        report_filename = generate_pdf_report(stones_data, annotated_image_path)
+        report_path = os.path.join(app.config['REPORTS_FOLDER'], report_filename)
+        
+        # Clean up temporary image if created
+        if annotated_image_path and os.path.exists(annotated_image_path):
+            try:
+                os.remove(annotated_image_path)
+            except:
+                pass  # Ignore cleanup errors
+        
+        # Return the report file
+        return send_file(
+            report_path,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f"kidney_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        )
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to generate report: {str(e)}"}), 500
 
 @app.route('/health', methods=['GET'])
 def health_check():

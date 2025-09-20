@@ -14,7 +14,8 @@ import {
   TrendingUp,
   MapPin,
   Info,
-  Download
+  Download,
+  FileText
 } from "lucide-react";
 import Button from "@/components/ui/button";
 
@@ -23,6 +24,7 @@ export default function ResultsPage() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reportGenerating, setReportGenerating] = useState(false);
 
   useEffect(() => {
     const uploadedFile = sessionStorage.getItem("uploadedFile");
@@ -177,6 +179,58 @@ export default function ResultsPage() {
     }
   };
 
+  const generateReport = async () => {
+    if (!result) return;
+    
+    try {
+      setReportGenerating(true);
+      
+      // Prepare data for report generation
+      const reportData = {
+        detections: result.detections || [],
+        summary: result.summary || {},
+        metadata: result.metadata || {},
+        annotated_image: result.annotated_image || null,
+        analysis_timestamp: result.analysis_timestamp || new Date().toISOString()
+      };
+
+      // Call Flask API to generate report
+      const response = await fetch('http://localhost:5000/generate-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      // Get the PDF blob
+      const pdfBlob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `kidney_scan_report_${new Date().getTime()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      
+    } catch (err) {
+      console.error("Error generating report:", err);
+      alert(`Failed to generate report: ${err.message}`);
+    } finally {
+      setReportGenerating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
@@ -222,7 +276,7 @@ export default function ResultsPage() {
   const SeverityIcon = severityConfig.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+    <div className="min-h-screen bg-[#] p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 pt-6">
@@ -436,6 +490,17 @@ export default function ResultsPage() {
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3"
           >
             Analyze Another Image
+          </Button>
+          <Button
+            onClick={generateReport}
+            disabled={reportGenerating}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+            leftIcon={reportGenerating ? 
+              <Activity className="w-4 h-4 animate-spin" /> : 
+              <FileText className="w-4 h-4" />
+            }
+          >
+            {reportGenerating ? 'Generating...' : 'Download Report'}
           </Button>
           <Button
             onClick={() => window.print()}
