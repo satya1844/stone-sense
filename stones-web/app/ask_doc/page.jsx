@@ -3,11 +3,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Button from "@/components/ui/button";
+import { useAuth } from "@/lib/auth-context";
+
 export default function AskDocPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
+  const { user } = useAuth();
 
   const handleSkip = () => {
     router.push("/upload");
@@ -16,13 +20,44 @@ export default function AskDocPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
     
-    // Here you could save the contact info to user profile
-    // For now, just simulate a brief delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (!phone && !email) {
+      setError("Please provide either phone number or email");
+      setLoading(false);
+      return;
+    }
     
-    setLoading(false);
-    router.push("/upload");
+    try {
+      // Save doctor contact info to Flask backend
+      const doctorData = {
+        user_id: user?.uid || '',
+        doctor_phone: phone.trim(),
+        doctor_email: email.trim(),
+        updated_date: new Date().toISOString().split('T')[0]
+      };
+      
+      const response = await fetch('http://localhost:5000/save-doctor-contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(doctorData),
+      });
+      
+      if (response.ok) {
+        console.log('Doctor contact saved successfully');
+        router.push("/upload");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to save doctor contact');
+      }
+    } catch (error) {
+      console.error('Error saving doctor contact:', error);
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,6 +99,12 @@ export default function AskDocPage() {
                 </p>
               </div>
 
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-red-600 text-sm">{error}</p>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">
                   <div>
@@ -95,13 +136,13 @@ export default function AskDocPage() {
 
                 <div className="pt-6 align-middle  ">
                   <Button
-                    type="button"
+                    type="submit"
                     disabled={(!phone && !email) || loading}
                     className="w-1/2  my-3 mr-5"
                     variant="uiverse"
                     
                   >
-                    {loading ? "Processing..." : "Next"}
+                    {loading ? "Saving..." : "Next"}
 
                   </Button>
                   

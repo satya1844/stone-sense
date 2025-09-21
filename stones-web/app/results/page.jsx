@@ -19,9 +19,11 @@ import {
 } from "lucide-react";
 import Button from "@/components/ui/button";
 import HealthChatbot from "@/components/chatbot/HealthChatbot";
+import { useAuth } from "@/lib/auth-context";
 
 export default function ResultsPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -192,7 +194,8 @@ export default function ResultsPage() {
         summary: result.summary || {},
         metadata: result.metadata || {},
         annotated_image: result.annotated_image || null,
-        analysis_timestamp: result.analysis_timestamp || new Date().toISOString()
+        analysis_timestamp: result.analysis_timestamp || new Date().toISOString(),
+        user_id: user?.uid || null  // Add user ID from Firebase auth
       };
 
       // Call Flask API to generate report

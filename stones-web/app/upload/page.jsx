@@ -209,6 +209,7 @@ const UploadPage = () => {
           </div>
         </div>
 
+
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Kindly upload your scanned copy here.</h1>
@@ -334,15 +335,15 @@ const UploadPage = () => {
             {/* Water Feature */}
             <div 
               onClick={() => handleFeatureClick('Hydration Tips')}
-              className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.03] border-2 border-blue-200 hover:border-blue-300"
+              className="bg-white rounded-2xl p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.15)] transition-all duration-300 cursor-pointer hover:scale-[1.03] border border-gray-200 hover:border-gray-300"
             >
               <div className="flex flex-col items-center text-center space-y-3 pt-2">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <div className="w-8 h-8 bg-white rounded-full shadow-inner"></div>
                 </div>
                 <div className="space-y-1 pt-1">
-                  <h3 className="text-lg font-bold text-blue-900 tracking-tight">Stay Hydrated</h3>
-                  <p className="text-blue-800 text-sm leading-relaxed font-medium">
+                  <h3 className="text-lg font-bold text-gray-800 tracking-tight">Stay Hydrated</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed font-medium">
                     Drink 8-10 glasses of water daily to prevent stone formation
                   </p>
                 </div>
@@ -352,15 +353,15 @@ const UploadPage = () => {
             {/* Diet Feature */}
             <div 
               onClick={() => handleFeatureClick('Dietary Guidelines')}
-              className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.03] border-2 border-orange-200 hover:border-orange-300"
+              className="bg-white rounded-2xl p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.15)] transition-all duration-300 cursor-pointer hover:scale-[1.03] border border-gray-200 hover:border-gray-300"
             >
               <div className="flex flex-col items-center text-center space-y-3 pt-2">
                 <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <Zap className="w-8 h-8 text-white" />
                 </div>
                 <div className="space-y-1 pt-1">
-                  <h3 className="text-lg font-bold text-orange-900 tracking-tight">Healthy Diet</h3>
-                  <p className="text-orange-800 text-sm leading-relaxed font-medium">
+                  <h3 className="text-lg font-bold text-gray-800 tracking-tight">Healthy Diet</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed font-medium">
                     Balanced nutrition and low sodium intake
                   </p>
                 </div>
@@ -370,15 +371,15 @@ const UploadPage = () => {
             {/* Exercise Feature */}
             <div 
               onClick={() => handleFeatureClick('Exercise Routine')}
-              className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.03] border-2 border-green-200 hover:border-green-300"
+              className="bg-white rounded-2xl p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.15)] transition-all duration-300 cursor-pointer hover:scale-[1.03] border border-gray-200 hover:border-gray-300"
             >
               <div className="flex flex-col items-center text-center space-y-3 pt-2">
                 <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <Calendar className="w-8 h-8 text-white" />
                 </div>
                 <div className="space-y-1 pt-1">
-                  <h3 className="text-lg font-bold text-green-900 tracking-tight">Stay Active</h3>
-                  <p className="text-green-800 text-sm leading-relaxed font-medium">
+                  <h3 className="text-lg font-bold text-gray-800 tracking-tight">Stay Active</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed font-medium">
                     Regular exercise improves kidney health
                   </p>
                 </div>
@@ -388,15 +389,15 @@ const UploadPage = () => {
             {/* Medical Checkup Feature */}
             <div 
               onClick={() => handleFeatureClick('Medical Checkups')}
-              className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.03] border-2 border-purple-200 hover:border-purple-300"
+              className="bg-white rounded-2xl p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.15)] transition-all duration-300 cursor-pointer hover:scale-[1.03] border border-gray-200 hover:border-gray-300"
             >
               <div className="flex flex-col items-center text-center space-y-3 pt-2">
                 <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <Star className="w-8 h-8 text-white" />
                 </div>
                 <div className="space-y-1 pt-1">
-                  <h3 className="text-lg font-bold text-purple-900 tracking-tight">Regular Checkups</h3>
-                  <p className="text-purple-800 text-sm leading-relaxed font-medium">
+                  <h3 className="text-lg font-bold text-gray-800 tracking-tight">Regular Checkups</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed font-medium">
                     Monitor kidney health with routine medical visits
                   </p>
                 </div>

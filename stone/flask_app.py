@@ -15,6 +15,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.utils import ImageReader
 from datetime import datetime
 from chatbot_service import get_health_advice, get_stone_specific_info
+from simple_user_manager import SimpleUserDataManager
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -23,6 +24,9 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['REPORTS_FOLDER'] = 'reports'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['REPORTS_FOLDER'], exist_ok=True)
+
+# Initialize simple user data manager
+user_manager = SimpleUserDataManager()
 
 def calculate_pixel_to_mm_scale(image_width, image_height):
     """
@@ -129,7 +133,7 @@ def image_to_base64(image_path):
         base64_string = base64.b64encode(img_data).decode('utf-8')
         return f"data:image/jpeg;base64,{base64_string}"
 
-def generate_pdf_report(stones_data, annotated_image_path):
+def generate_pdf_report(stones_data, annotated_image_path, user_data=None):
     report_filename = f"kidney_scan_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     report_path = os.path.join(app.config['REPORTS_FOLDER'], report_filename)
     
@@ -159,22 +163,50 @@ def generate_pdf_report(stones_data, annotated_image_path):
     elements.append(Spacer(1, 20))
     
     # Patient Info Table
-    patient_data = [
-        ['Patient Name: _______', 'Uploaded By: _______'],
-        ['Age/Sex: _______', 'Status: Reviewed'],
-        [f'Scan Date: {datetime.now().strftime("%d %b %Y")}', '✓ Reviewed']
-    ]
+    if user_data:
+        # Calculate age from date of birth if available
+        age = 'N/A'
+        if user_data.get('date_of_birth'):
+            try:
+                birth_date = datetime.strptime(user_data.get('date_of_birth'), '%Y-%m-%d')
+                today = datetime.now()
+                age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+            except:
+                age = 'N/A'
+        
+        user_data_table = [
+            ['Patient Name:', f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}"],
+            ['User ID:', user_data.get('user_id', '')],
+            ['Age:', str(age)],
+            ['Email:', user_data.get('email', '')],
+            ['Phone:', user_data.get('phone', '')],
+            ['Registration Date:', user_data.get('registration_date', '')],
+            [f'Scan Date:', datetime.now().strftime("%d %b %Y")],
+            ['Status:', '✓ Reviewed']
+        ]
+    else:
+        user_data_table = [
+            ['Patient Name:', '_______'],
+            ['User ID:', '_______'],
+            ['Age:', '_______'],
+            ['Email:', '_______'],
+            ['Phone:', '_______'],
+            ['Registration Date:', '_______'],
+            [f'Scan Date:', datetime.now().strftime("%d %b %Y")],
+            ['Status:', '✓ Reviewed']
+        ]
     
-    patient_table = Table(patient_data, colWidths=[4*inch, 4*inch])
-    patient_table.setStyle(TableStyle([
+    user_table = Table(user_data_table, colWidths=[2*inch, 4*inch])
+    user_table.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
         ('BACKGROUND', (0, 0), (-1, -1), colors.white),
         ('PADDING', (0, 0), (-1, -1), 12),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),  # Make labels bold
     ]))
-    elements.append(patient_table)
+    elements.append(user_table)
     elements.append(Spacer(1, 30))
 
     # Add the annotated image
@@ -488,6 +520,9 @@ def predict():
         if file.filename == '':
             return jsonify({"error": "No file selected"}), 400
 
+        # Get patient ID from form data (optional)
+        patient_id = request.form.get('patient_id', '')
+        
         # Validate file type
         allowed_types = ['image/jpeg', 'image/jpg', 'image/png']
         if file.content_type not in allowed_types:
@@ -652,9 +687,15 @@ def generate_report():
         summary = data.get('summary', {})
         metadata = data.get('metadata', {})
         annotated_image_base64 = data.get('annotated_image', '')
+        user_id = data.get('user_id', '')  # User ID from Firebase auth
         
         if not detections and summary.get('total_stones', 0) == 0:
             return jsonify({"error": "No detection data provided"}), 400
+        
+        # Get user data if user_id is provided
+        user_data = None
+        if user_id:
+            user_data = user_manager.get_user_by_id(user_id)
         
         # Create a temporary annotated image file if base64 is provided
         annotated_image_path = None
@@ -685,8 +726,8 @@ def generate_report():
             }
             stones_data.append(stone_info)
         
-        # Generate PDF report
-        report_filename = generate_pdf_report(stones_data, annotated_image_path)
+        # Generate PDF report with user data
+        report_filename = generate_pdf_report(stones_data, annotated_image_path, user_data)
         report_path = os.path.join(app.config['REPORTS_FOLDER'], report_filename)
         
         # Clean up temporary image if created
@@ -736,6 +777,86 @@ def chat():
         return jsonify({
             'error': f'I apologize, but I\'m unable to process your question at the moment. Error: {str(e)}'
         }), 500
+
+@app.route('/save-user-data', methods=['POST'])
+def save_user_data():
+    """Save user data from registration to CSV"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Validate required fields
+        required_fields = ['user_id', 'first_name', 'last_name', 'email']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        # Save user data
+        success = user_manager.save_user_data(data)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'User data saved successfully'
+            })
+        else:
+            return jsonify({'error': 'Failed to save user data'}), 500
+            
+    except Exception as e:
+        return jsonify({'error': f'Failed to save user data: {str(e)}'}), 500
+
+@app.route('/save-doctor-contact', methods=['POST'])
+def save_doctor_contact():
+    """Save doctor contact information to CSV"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Validate required fields
+        user_id = data.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'User ID is required'}), 400
+        
+        # Validate that at least one contact method is provided
+        doctor_phone = data.get('doctor_phone', '').strip()
+        doctor_email = data.get('doctor_email', '').strip()
+        
+        if not doctor_phone and not doctor_email:
+            return jsonify({'error': 'At least one contact method (phone or email) is required'}), 400
+        
+        # Save doctor contact
+        success = user_manager.save_doctor_contact(data)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Doctor contact saved successfully'
+            })
+        else:
+            return jsonify({'error': 'Failed to save doctor contact'}), 500
+            
+    except Exception as e:
+        return jsonify({'error': f'Failed to save doctor contact: {str(e)}'}), 500
+
+@app.route('/get-user-data/<user_id>', methods=['GET'])
+def get_user_data(user_id):
+    """Get user data by user ID for reports"""
+    try:
+        user_data = user_manager.get_user_by_id(user_id)
+        if user_data:
+            return jsonify({
+                'success': True,
+                'user': user_data
+            })
+        else:
+            return jsonify({'error': 'User not found'}), 404
+            
+    except Exception as e:
+        return jsonify({'error': f'Failed to retrieve user data: {str(e)}'}), 500
 
 @app.route('/health', methods=['GET'])
 def health_check():

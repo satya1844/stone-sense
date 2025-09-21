@@ -119,6 +119,36 @@ export default function RegisterPage() {
         throw new Error('Failed to create session');
       }
       
+      // Save user data to CSV via Flask API
+      try {
+        const userDataForCSV = {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          phone: formData.mobileNumber,
+          date_of_birth: formData.dateOfBirth,
+          user_id: user.uid, // Use Firebase UID as user identifier
+          registration_date: new Date().toISOString().split('T')[0]
+        };
+        
+        const csvResponse = await fetch('http://localhost:5000/save-user-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userDataForCSV),
+        });
+        
+        if (!csvResponse.ok) {
+          console.warn('Failed to save user data to CSV, but registration successful');
+        } else {
+          console.log('User data saved to CSV successfully');
+        }
+      } catch (csvError) {
+        console.warn('CSV save error:', csvError);
+        // Don't fail registration if CSV save fails
+      }
+      
       console.log("Registration successful for user:", user.email);
       
       // Redirect to ask_doc page
