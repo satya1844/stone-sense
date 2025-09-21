@@ -7,7 +7,7 @@ import { getFirebaseAuth } from "@/lib/firebase-client";
 import { useAuth } from "@/lib/auth-context";
 import Button from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { Upload, FileText, Zap, Calendar, Star, Eye, AlertCircle, CheckCircle2, LogOut, User } from 'lucide-react';
+import { Upload, FileText, Zap, Calendar, Star, Eye, AlertCircle, CheckCircle2, LogOut, User, ArrowLeft } from 'lucide-react';
 
 const UploadPage = () => {
   const { user, loading } = useAuth();
@@ -179,201 +179,227 @@ const UploadPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
-      <div className="max-w-md mx-auto">
-        {/* User Header with Logout */}
+      <div className="max-w-screen mx-auto">
+
+
+        {/* Header with Back Button and User Info */}
         <div className="flex justify-between items-center mb-6 pt-4">
-          <div className="flex items-center space-x-2">
-            <User className="w-5 h-5 text-gray-600" />
-            <span className="text-sm text-gray-600">
-              {user.displayName || user.email}
-            </span>
-          </div>
-          <button 
-            onClick={handleLogout}
-            className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          <button
+            onClick={() => router.push("/ask_doc")}
+            className="p-3 rounded-full bg-white hover:bg-gray-50 transition-colors shadow-sm"
           >
-            <LogOut className="w-4 h-4" />
-            <span>Logout</span>
+            <ArrowLeft className="w-5 h-5 text-gray-700" />
           </button>
+          
+          <div className="flex items-center space-x-3 bg-white rounded-full px-4 py-2 shadow-sm">
+            <div className="flex items-center space-x-2">
+              <User className="w-4 h-4 text-gray-600" />
+              <span className="text-sm text-gray-700 font-medium">
+                {user.displayName || user.email}
+              </span>
+            </div>
+            <div className="w-px h-4 bg-gray-300"></div>
+            <button 
+              onClick={handleLogout}
+              className="flex items-center space-x-1 text-sm text-gray-500 hover:text-red-600 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Upload className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800">Upload Medical Scan</h1>
-          <p className="text-gray-600 text-sm mt-2">AI-powered kidney stone detection</p>
+          <h1 className="text-3xl font-bold text-gray-800">Kindly upload your scanned copy here.</h1>
         </div>
 
-        {/* Upload Section */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
-          <div
-            className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
-              isDragging 
-                ? 'border-indigo-500 bg-indigo-50' 
-                : 'border-gray-300 hover:border-indigo-400 hover:bg-gray-50'
-            }`}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onClick={handleUploadClick}
-          >
-            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Upload your medical scan
-            </h3>
-            <p className="text-gray-500 text-sm mb-4">
-              {selectedFile ? selectedFile.name : 'Click to browse or drag and drop your scan image'}
-            </p>
-            <p className="text-gray-400 text-xs mb-4">
-              Supported: JPEG, PNG • Max size: 10MB
-            </p>
-            
-            <input
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileSelect}
-              accept=".jpg,.jpeg,.png"
-              className="hidden"
-            />
-            
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleUploadClick();
-              }}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              Choose File
-            </button>
-          </div>
-
-          {/* Error Display */}
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          )}
-
-          {/* Progress Bar */}
-          {selectedFile && (
-            <div className="mt-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  {isProcessing ? 'Processing...' : 'Ready to analyze'}
-                </span>
-                <span className="text-sm font-bold text-indigo-600">{uploadProgress}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className={`h-3 rounded-full transition-all duration-300 ease-out ${
-                    uploadProgress === 100 ? 'bg-gradient-to-r from-green-400 to-green-500' 
-                    : 'bg-gradient-to-r from-blue-400 to-indigo-500'
-                  }`}
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {detectionResult && (
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
-              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-              <div>
-                <p className="text-green-700 text-sm font-medium">Analysis Complete!</p>
-                <p className="text-green-600 text-xs">
-                  Found {detectionResult.summary?.total_stones || 0} stone(s) • 
-                  Risk level: {detectionResult.summary?.risk_level || 'Unknown'}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="mt-6 space-y-3">
-            {selectedFile && !detectionResult && (
-              <Button
-                onClick={processImage}
-                disabled={isProcessing}
-                variant="uiverse"
-                className="w-full"
-                leftIcon={isProcessing ? <LoadingSpinner size="sm" /> : <Zap className="w-4 h-4" />}
+        {/* Main Content - Two Column Layout */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Column - Upload Section */}
+          <div className="lg:w-1/2">
+            <div className="bg-white rounded-2xl p-4 shadow-lg">
+              <div
+                className={`border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 ${
+                  isDragging 
+                    ? 'border-indigo-500 bg-indigo-50' 
+                    : 'border-gray-300 hover:border-indigo-400 hover:bg-gray-50'
+                }`}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={handleUploadClick}
               >
-                {isProcessing ? 'Analyzing...' : 'Analyze Scan'}
-              </Button>
-            )}
-
-            {detectionResult && (
-              <Button
-                onClick={handleViewResult}
-                variant="uiverse"
-                className="w-full"
-                leftIcon={<Eye className="w-4 h-4" />}
-              >
-                View Detailed Results
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Feature Cards */}
-        <div className="space-y-4">
-          {/* Water Feature */}
-          <div 
-            onClick={() => handleFeatureClick('Hydration Tips')}
-            className="bg-white rounded-2xl p-4 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-[1.02]"
-          >
-            <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Stay Hydrated</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  Drinking plenty of water helps prevent kidney stone formation and promotes overall kidney health.
+                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Upload your medical scan
+                </h3>
+                <p className="text-gray-500 text-sm mb-4">
+                  {selectedFile ? selectedFile.name : 'Click to browse or drag and drop your scan image'}
                 </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Energy Feature */}
-          <div 
-            onClick={() => handleFeatureClick('Dietary Guidelines')}
-            className="bg-white rounded-2xl p-4 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-[1.02]"
-          >
-            <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Zap className="w-6 h-6 text-orange-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Healthy Diet</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  Balanced nutrition and limiting sodium can help prevent kidney stone recurrence.
+                <p className="text-gray-400 text-xs mb-4">
+                  Supported: JPEG, PNG • Max size: 10MB
                 </p>
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileSelect}
+                  accept=".jpg,.jpeg,.png"
+                  className="hidden"
+                />
+                
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleUploadClick();
+                  }}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Choose File
+                </button>
               </div>
-            </div>
-          </div>
 
-          {/* Daily Routine Feature */}
-          <div 
-            onClick={() => handleFeatureClick('Exercise Routine')}
-            className="bg-white rounded-2xl p-4 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-[1.02]"
-          >
-            <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-6 h-6 text-green-500" />
-              </div>
-              <div>
-                <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="font-semibold text-gray-800">Stay Active</h3>
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+              {/* Error Display */}
+              {error && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                  <p className="text-red-700 text-sm">{error}</p>
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  Regular physical activity improves overall health and may help prevent kidney stones.
-                </p>
+              )}
+
+              {/* Progress Bar */}
+              {selectedFile && (
+                <div className="mt-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-700">
+                      {isProcessing ? 'Processing...' : 'Ready to analyze'}
+                    </span>
+                    <span className="text-sm font-bold text-indigo-600">{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className={`h-3 rounded-full transition-all duration-300 ease-out ${
+                        uploadProgress === 100 ? 'bg-gradient-to-r from-green-400 to-green-500' 
+                        : 'bg-gradient-to-r from-blue-400 to-indigo-500'
+                      }`}
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Success Message */}
+              {detectionResult && (
+                <div className="mt-4 p-3 rounded-lg flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <div>
+                    <p className="text-green-700 text-sm font-medium">Analysis Complete!</p>
+                    <p className="text-green-600 text-xs">
+                      Found {detectionResult.summary?.total_stones || 0} stone(s) • 
+                      Risk level: {detectionResult.summary?.risk_level || 'Unknown'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="mt-6 space-y-3">
+                {selectedFile && !detectionResult && (
+                  <Button
+                    onClick={processImage}
+                    disabled={isProcessing}
+                    variant="uiverse"
+                    className="w-full"
+                    leftIcon={isProcessing ? <LoadingSpinner size="sm" /> : <Zap className="w-4 h-4" />}
+                  >
+                    {isProcessing ? 'Analyzing...' : 'Analyze Scan'}
+                  </Button>
+                )}
+
+                {detectionResult && (
+                  <button
+                    onClick={handleViewResult}
+                    className="w-full mx-auto p-3 border-green-400 rounded-3xl hover:bg-green-400 hover:text-white transition"
+                  >
+                    View Detailed Results
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Feature Cards */}
+          <div className="lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Water Feature */}
+            <div 
+              onClick={() => handleFeatureClick('Hydration Tips')}
+              className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.03] border-2 border-blue-200 hover:border-blue-300"
+            >
+              <div className="flex flex-col items-center text-center space-y-3 pt-2">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <div className="w-8 h-8 bg-white rounded-full shadow-inner"></div>
+                </div>
+                <div className="space-y-1 pt-1">
+                  <h3 className="text-lg font-bold text-blue-900 tracking-tight">Stay Hydrated</h3>
+                  <p className="text-blue-800 text-sm leading-relaxed font-medium">
+                    Drink 8-10 glasses of water daily to prevent stone formation
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Diet Feature */}
+            <div 
+              onClick={() => handleFeatureClick('Dietary Guidelines')}
+              className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.03] border-2 border-orange-200 hover:border-orange-300"
+            >
+              <div className="flex flex-col items-center text-center space-y-3 pt-2">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Zap className="w-8 h-8 text-white" />
+                </div>
+                <div className="space-y-1 pt-1">
+                  <h3 className="text-lg font-bold text-orange-900 tracking-tight">Healthy Diet</h3>
+                  <p className="text-orange-800 text-sm leading-relaxed font-medium">
+                    Balanced nutrition and low sodium intake
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Exercise Feature */}
+            <div 
+              onClick={() => handleFeatureClick('Exercise Routine')}
+              className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.03] border-2 border-green-200 hover:border-green-300"
+            >
+              <div className="flex flex-col items-center text-center space-y-3 pt-2">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Calendar className="w-8 h-8 text-white" />
+                </div>
+                <div className="space-y-1 pt-1">
+                  <h3 className="text-lg font-bold text-green-900 tracking-tight">Stay Active</h3>
+                  <p className="text-green-800 text-sm leading-relaxed font-medium">
+                    Regular exercise improves kidney health
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Medical Checkup Feature */}
+            <div 
+              onClick={() => handleFeatureClick('Medical Checkups')}
+              className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.03] border-2 border-purple-200 hover:border-purple-300"
+            >
+              <div className="flex flex-col items-center text-center space-y-3 pt-2">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Star className="w-8 h-8 text-white" />
+                </div>
+                <div className="space-y-1 pt-1">
+                  <h3 className="text-lg font-bold text-purple-900 tracking-tight">Regular Checkups</h3>
+                  <p className="text-purple-800 text-sm leading-relaxed font-medium">
+                    Monitor kidney health with routine medical visits
+                  </p>
+                </div>
               </div>
             </div>
           </div>

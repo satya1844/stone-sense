@@ -276,50 +276,46 @@ export default function ResultsPage() {
   const SeverityIcon = severityConfig.icon;
 
   return (
-    <div className="min-h-screen bg-[#] p-4">
+    <div className="min-h-screen bg-white p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 pt-6">
           <div className="flex items-center justify-between mb-4">
-            <Button
+            <button
               onClick={() => router.push("/upload")}
-              variant="ghost"
-              className="p-2"
-              leftIcon={<ArrowLeft className="w-4 h-4" />}
+              className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
             >
-              Back
-            </Button>
-            <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center">
-              <Activity className="w-6 h-6 text-white" />
-            </div>
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
+            </button>
+            
             <div className="w-8"></div>
           </div>
           <h1 className="text-3xl font-bold text-gray-800">AI Analysis Complete</h1>
-          <p className="text-gray-600 mt-2">Detailed kidney stone detection results</p>
+          <p className="text-gray-600 mt-2">Your kidney stone analysis is ready.</p>
         </div>
 
         {/* Annotated Image Display */}
         {result.annotated_image && (
-          <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
+          <div className="bg-[#ddeeff] rounded-3xl p-6 shadow-lg mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-                <FileImage className="w-5 h-5 mr-2 text-indigo-600" />
+                <FileImage className="w-5 h-5 mr-2 text-[#392f55]" />
                 Annotated Scan
               </h2>
-              <Button
+              <button
                 onClick={downloadAnnotatedImage}
                 variant="outline"
-                className="px-4 py-2"
+                className="px-4 py-2 bg-[#392f55] hover:bg-[#2c2440] text-white rounded-2xl flex items-center"
                 leftIcon={<Download className="w-4 h-4" />}
               >
                 Download
-              </Button>
+              </button>
             </div>
             <div className="flex justify-center">
               <img 
                 src={result.annotated_image} 
                 alt="Annotated kidney scan with detected stones"
-                className="max-w-full h-auto rounded-lg shadow-md"
+                className="max-w-full h-auto rounded-2xl shadow-md"
                 style={{ maxHeight: '400px' }}
               />
             </div>
@@ -328,7 +324,7 @@ export default function ResultsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Detection Summary Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <div className="bg-[#ddeeff] rounded-3xl p-6 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
               <Target className="w-5 h-5 mr-2 text-indigo-600" />
               Detection Summary
@@ -345,13 +341,13 @@ export default function ResultsPage() {
             {/* Summary Grid */}
             {result.summary?.total_stones > 0 && (
               <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-center p-4 bg-blue-50 rounded-2xl">
                   <div className="text-xl font-bold text-blue-600">
                     {result.summary.largest_stone_mm?.toFixed(1)}mm
                   </div>
                   <div className="text-sm text-gray-600">Largest Stone</div>
                 </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-center p-4 bg-purple-50 rounded-2xl">
                   <div className="text-xl font-bold text-purple-600">
                     {(result.summary.average_confidence * 100)?.toFixed(1)}%
                   </div>
@@ -362,7 +358,7 @@ export default function ResultsPage() {
 
             {/* Severity Level */}
             {result.summary?.severity && (
-              <div className={`p-4 rounded-lg border-2 ${severityConfig.bg} ${severityConfig.border}`}>
+              <div className={`p-4 rounded-2xl border-2 ${severityConfig.bg} ${severityConfig.border}`}>
                 <div className="flex items-center justify-center mb-2">
                   <SeverityIcon className={`w-6 h-6 mr-2 ${severityConfig.text}`} />
                   <span className={`text-lg font-bold ${severityConfig.text}`}>
@@ -378,17 +374,17 @@ export default function ResultsPage() {
 
           {/* Individual Detections Card */}
           {result.detections && result.detections.length > 0 && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="bg-[#ddeeff] rounded-3xl p-6 shadow-lg">
               <h3 className="text-xl font-semibold mb-4 flex items-center">
                 <MapPin className="w-5 h-5 mr-2 text-indigo-600" />
                 Individual Stones ({result.detections.length})
               </h3>
               <div className="space-y-4 max-h-80 overflow-y-auto">
                 {result.detections.map((stone, idx) => (
-                  <div key={idx} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div key={idx} className="border rounded-2xl p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex justify-between items-start mb-2">
                       <span className="font-semibold text-gray-800">Stone #{stone.id}</span>
-                      <span className="text-sm bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
+                      <span className="text-sm bg-indigo-100 text-indigo-800 px-2 py-1 rounded-xl">
                         {stone.type || 'kidney_stone'}
                       </span>
                     </div>
@@ -424,62 +420,32 @@ export default function ResultsPage() {
             </div>
           )}
 
-          {/* Recommendations Card */}
-          {result.recommendations && result.recommendations.length > 0 && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <TrendingUp className="w-5 h-5 mr-2 text-indigo-600" />
-                Medical Recommendations
-              </h3>
-              <ul className="space-y-3">
-                {result.recommendations.map((rec, idx) => (
-                  <li key={idx} className="flex items-start">
-                    <span className="w-2 h-2 bg-indigo-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span className="text-gray-700">{rec}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Metadata Card */}
-          {result.metadata && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <Info className="w-5 h-5 mr-2 text-indigo-600" />
-                Analysis Details
-              </h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Processed:</span>
-                  <span className="font-medium">{formatDate(result.analysis_timestamp)}</span>
-                </div>
-                {result.metadata.filename && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Filename:</span>
-                    <span className="font-medium truncate ml-2">{result.metadata.filename}</span>
-                  </div>
-                )}
-                {result.metadata.image_dimensions && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Dimensions:</span>
-                    <span className="font-medium">{result.metadata.image_dimensions}</span>
-                  </div>
-                )}
-                {result.metadata.scale_factor_mm_per_pixel && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Scale Factor:</span>
-                    <span className="font-medium">{result.metadata.scale_factor_mm_per_pixel.toFixed(3)} mm/px</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
+        {/* Recommendations Card - Centered */}
+        {result.recommendations && result.recommendations.length > 0 && (
+          <div className="flex justify-center mt-6">
+            <div className="bg-white rounded-3xl p-6 max-w-2xl w-full">
+              <h3 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
+                Next Steps
+              </h3>
+              <div className="space-y-4 flex flex-col items-center">
+                {result.recommendations.map((rec, idx) => (
+                  <div 
+                    key={idx} 
+                    className="bg-gray-50 rounded-4xl p-4 shadow-[4px_4px_0px_#392455] border border-gray-100 max-w-md w-full"
+                  >
+                    <span className="text-gray-700 text-sm leading-relaxed block text-center">{rec}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
-        <div className="flex justify-center gap-4 mt-8 mb-6">
-          <Button
+        <div className="flex justify-center gap-6 mt-8 mb-6">
+          <button
             onClick={() => {
               // Clear previous results when starting new analysis
               sessionStorage.removeItem("detectionResult");
@@ -487,28 +453,27 @@ export default function ResultsPage() {
               sessionStorage.removeItem("uploadedFileData");
               router.push("/upload");
             }}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3"
+            className="bg-[#3aaafe] hover:bg-[#2a9ae8] text-white px-6 py-3 rounded-3xl shadow-[4px_4px_0px_#392455] border border-blue-200 transform active:scale-95 active:shadow-[2px_2px_0px_#392455] transition-all duration-150"
           >
             Analyze Another Image
-          </Button>
-          <Button
+          </button>
+          <button
             onClick={generateReport}
             disabled={reportGenerating}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-            leftIcon={reportGenerating ? 
+            className="bg-[#3aaafe] hover:bg-[#2a9ae8] text-white px-6 py-3 rounded-3xl shadow-[4px_4px_0px_#392455] border border-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 active:shadow-[2px_2px_0px_#392455] transition-all duration-150 flex items-center gap-2"
+          >
+            {reportGenerating ? 
               <Activity className="w-4 h-4 animate-spin" /> : 
               <FileText className="w-4 h-4" />
             }
-          >
             {reportGenerating ? 'Generating...' : 'Download Report'}
-          </Button>
-          <Button
+          </button>
+          <button
             onClick={() => window.print()}
-            variant="outline"
-            className="px-6 py-3"
+            className="bg-[#3aaafe] hover:bg-[#2a9ae8] text-white px-6 py-3 rounded-3xl shadow-[4px_4px_0px_#392455] border border-blue-200 transform active:scale-95 active:shadow-[2px_2px_0px_#392455] transition-all duration-150"
           >
             Print Results
-          </Button>
+          </button>
         </div>
       </div>
     </div>

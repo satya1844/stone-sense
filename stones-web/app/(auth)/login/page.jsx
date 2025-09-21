@@ -4,6 +4,7 @@ import { useState ,useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase-client";
+import { ArrowLeft } from "lucide-react";
 import Button from "@/components/ui/button";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -176,14 +177,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#febacd] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#febacd] flex items-center justify-center p-4 relative">
+      {/* Back Button */}
+      <button
+        onClick={() => router.push("/")}
+        className="absolute top-6 left-6 p-3 rounded-full bg-white hover:bg-gray-50 transition-colors shadow-sm z-10"
+      >
+        <ArrowLeft className="w-5 h-5 text-gray-700" />
+      </button>
+      
       <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center gap-8">
         
           <div className="w-full lg:w-1/2 flex justify-center mb-8 lg:mb-0">
             <img 
               src="/login.png" 
               alt="Login illustration" 
-              className="max-w-full h-auto max-h-[500px] lg:max-h-[700px] object-contain"
+              className="w-[350px] lg:w-[350px] h-auto object-contain"
             />
           </div>
 
