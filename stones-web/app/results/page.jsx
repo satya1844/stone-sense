@@ -18,6 +18,7 @@ import {
   FileText
 } from "lucide-react";
 import Button from "@/components/ui/button";
+import HealthChatbot from "@/components/chatbot/HealthChatbot";
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -476,6 +477,11 @@ export default function ResultsPage() {
           </button>
         </div>
       </div>
+
+      {/* Health Chatbot - Shows only when stones are detected */}
+      {result.summary?.total_stones > 0 && (
+        <HealthChatbot detectionResults={result} />
+      )}
     </div>
   );
 }

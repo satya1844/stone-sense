@@ -1,7 +1,7 @@
 import os
 import base64
 import io
-from flask import Flask, request, render_template, send_file, jsonify
+from flask import Flask, request, render_template, send_file, jsonify, session
 from flask_cors import CORS
 from PIL import Image as PILImage
 from PIL import ImageDraw, ImageFont
@@ -14,9 +14,11 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib.utils import ImageReader
 from datetime import datetime
+from chatbot_service import get_health_advice, get_stone_specific_info
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+app.secret_key = 'your_secret_key_here'  # Required for session
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['REPORTS_FOLDER'] = 'reports'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -577,6 +579,15 @@ def predict():
                 }
                 stones_data.append(stone_info)
 
+            # Store stones data in session for chatbot use
+            session['stones_data'] = [{
+                "id": stone["id"],
+                "diameter_mm": f"{stone['diameter_mm']:.2f} mm",
+                "position": stone["position"],
+                "confidence": f"{stone['confidence']:.1%}",
+                "type": stone["type"]
+            } for stone in stones_data]
+
             # Calculate summary
             total_stones = len(stones_data)
             largest_stone = max([d["diameter_mm"] for d in stones_data], default=0)
@@ -695,6 +706,36 @@ def generate_report():
         
     except Exception as e:
         return jsonify({"error": f"Failed to generate report: {str(e)}"}), 500
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    """Chat endpoint for health advice based on stone detection results"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        user_query = data.get('question', '').strip()
+        stones_data = data.get('stones_data', [])
+        
+        if not user_query:
+            return jsonify({'error': 'No question provided'}), 400
+        
+        if not stones_data:
+            return jsonify({
+                'response': 'Please upload a kidney scan image first to get personalized advice based on your stone analysis.'
+            })
+        
+        # Get health advice using the chatbot service
+        response = get_health_advice(stones_data, user_query)
+        
+        return jsonify({'response': response})
+        
+    except Exception as e:
+        return jsonify({
+            'error': f'I apologize, but I\'m unable to process your question at the moment. Error: {str(e)}'
+        }), 500
 
 @app.route('/health', methods=['GET'])
 def health_check():
